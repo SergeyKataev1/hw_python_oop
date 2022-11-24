@@ -1,41 +1,44 @@
-# beta v1.0
+import sys
+from typing import Type
+from dataclasses import dataclass, asdict
+
+
+@dataclass
 class InfoMessage:
     """Информационное сообщение о тренировке."""
-    def __init__(self,
-                 training_type: str,
-                 duration: int,
-                 distance: float,
-                 speed: float,
-                 calories: float) -> None:
-        self.training_type = training_type
-        self.duration = duration
-        self.distance = distance
-        self.speed = speed
-        self.calories = calories
+    training_type: str
+    duration: float
+    distance: float
+    speed: float
+    calories: float
+
+    message: str = (
+        'Тип тренировки: {}; '
+        'Длительность: {:.3f} ч.; '
+        'Дистанция: {:.3f} км; '
+        'Ср. скорость: {:.3f} км/ч; '
+        'Потрачено ккал: {:.3f}.'
+    )
 
     def get_message(self) -> str:
-        return (f'Тип тренировки: {self.training_type}; '
-                f'Длительность: {self.duration:.3f} ч.; '
-                f'Дистанция: {self.distance:.3f} км; '
-                f'Ср. скорость: {self.speed:.3f} км/ч; '
-                f'Потрачено ккал: {self.calories:.3f}.')
+        return self.message.format(*asdict(self).values())
 
 
 class Training:
     """Базовый класс тренировки."""
-    M_IN_KM: int = 1000
+    M_IN_KM: float = 1000
     LEN_STEP: float = 0.65
-    MIN_IN_H: int = 60
-    action: int = None
+    MIN_IN_H: float = 60
+    action: float = None
 
     def __init__(self,
-                 action: int,
+                 action: float,
                  duration: float,
                  weight: float) -> None:
         self.action = action
         self.duration = duration
         self.weight = weight
-        self.training_type = self.__class__.__name__
+        self.training_type = type(self).__name__
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
@@ -47,7 +50,7 @@ class Training:
         self.mean_speed: float = self.get_distance() / self.duration
         return self.mean_speed
 
-    def get_spent_calories(self) -> float:  # не трогать вообще
+    def get_spent_calories(self) -> float:  # не трогать по ТЗ
         """Получить количество затраченных калорий."""
         pass
 
@@ -68,7 +71,7 @@ class Running(Training):
     """Тренировка: бег."""
     CALORIES_MEAN_SPEED_MULTIPLIER: float = 18
     CALORIES_MEAN_SPEED_SHIFT: float = 1.79
-    MIN_IN_H: int = 60
+    MIN_IN_H: float = 60
 
     def get_spent_calories(self) -> float:
         duration_time: float = self.duration * self.MIN_IN_H
@@ -84,9 +87,9 @@ class SportsWalking(Training):
     """Тренировка: спортивная ходьба."""
     CALORIES_WEIGHT_MULTIPLIER: float = 0.035
     CALORIES_SPEED_HEIGHT_MULTIPLIER: float = 0.029
-    MIN_IN_H: int = 60
+    MIN_IN_H: float = 60
     KMH_IN_MSEC: float = 0.278
-    CM_IN_M: int = 100
+    CM_IN_M: float = 100
 
     def __init__(self,
                  action: int,
@@ -109,10 +112,10 @@ class SportsWalking(Training):
 
 class Swimming(Training):
     """Тренировка: плавание."""
-    LEN_STEP = 1.38
+    LEN_STEP: float = 1.38
     MEAN_SPEED_MULTIPLIER: float = 1.1
     CALORIES_MEAN_WEIGHT_MULTIPLIER: int = 2
-    M_IN_KM: int = 1000
+    M_IN_KM: float = 1000
 
     def __init__(self,
                  action: int,
@@ -139,10 +142,15 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    training_types = {'SWM': Swimming,
-                      'RUN': Running,
-                      'WLK': SportsWalking}
-    return training_types[workout_type](*data)
+    training_types: dict[str, Type[Training]] = {
+        'SWM': Swimming,
+        'RUN': Running,
+        'WLK': SportsWalking
+    }
+    if workout_type not in training_types:
+        return sys.exit('Не удалось определить вид тренировки, приятного дня.')
+    else:
+        return training_types[workout_type](*data)
 
 
 def main(training: Training) -> None:
@@ -155,9 +163,9 @@ if __name__ == '__main__':
         ('SWM', [720, 1, 80, 25, 40]),
         ('RUN', [15000, 1, 75]),
         ('WLK', [9000, 1, 75, 180]),
+        ('ERR', [1000, 1000, 1000, 1000])  # тестовые ошибочные данные
     ]
 
     for workout_type, data in packages:
         training = read_package(workout_type, data)
         main(training)
-# это должно было быть просто, но НЕТ

@@ -1,5 +1,6 @@
 attrs==22.1.0
 colorama==0.4.6
+dataclasses==0.6
 exceptiongroup==1.0.4
 flake8==5.0.4
 iniconfig==1.1.1
