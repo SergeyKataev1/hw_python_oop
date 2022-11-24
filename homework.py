@@ -1,4 +1,4 @@
-# alpha v0.1
+# beta v1.0
 class InfoMessage:
     """Информационное сообщение о тренировке."""
     def __init__(self,
@@ -26,6 +26,7 @@ class Training:
     M_IN_KM: int = 1000
     LEN_STEP: float = 0.65
     MIN_IN_H: int = 60
+    action: int = None
 
     def __init__(self,
                  action: int,
@@ -38,15 +39,15 @@ class Training:
 
     def get_distance(self) -> float:
         """Получить дистанцию в км."""
-        self.distance_km = self.action * self.LEN_STEP / self.M_IN_KM
+        self.distance_km: float = self.action * self.LEN_STEP / self.M_IN_KM
         return self.distance_km
 
     def get_mean_speed(self) -> float:
         """Получить среднюю скорость движения."""
-        self.mean_speed = self.distance_km / self.duration
+        self.mean_speed: float = self.get_distance() / self.duration
         return self.mean_speed
 
-    def get_spent_calories(self) -> float:  # не трогать
+    def get_spent_calories(self) -> float:  # не трогать вообще
         """Получить количество затраченных калорий."""
         pass
 
@@ -71,10 +72,11 @@ class Running(Training):
 
     def get_spent_calories(self) -> float:
         duration_time: float = self.duration * self.MIN_IN_H
-        self.calories = ((self.CALORIES_MEAN_SPEED_MULTIPLIER
-                         * self.get_mean_speed()
-                         + self.CALORIES_MEAN_SPEED_SHIFT)
-                         * self.weight / self.M_IN_KM * duration_time)
+        self.calories: float = ((self.CALORIES_MEAN_SPEED_MULTIPLIER
+                                * self.get_mean_speed()
+                                + self.CALORIES_MEAN_SPEED_SHIFT)
+                                * self.weight / self.M_IN_KM
+                                * duration_time)
         return self.calories
 
 
@@ -96,12 +98,12 @@ class SportsWalking(Training):
 
     def get_spent_calories(self) -> float:
         duration_time: float = self.duration * self.MIN_IN_H
-        speed_in_ms: float = self.mean_speed * self.KMH_IN_MSEC
+        speed_in_ms: float = self.get_mean_speed() * self.KMH_IN_MSEC
         height_m: float = self.height / self.CM_IN_M
-        self.calories = ((self.CALORIES_WEIGHT_MULTIPLIER
-                         * self.weight + (speed_in_ms**2 / height_m)
-                         * self.CALORIES_SPEED_HEIGHT_MULTIPLIER
-                         * self.weight) * duration_time)
+        self.calories: float = ((self.CALORIES_WEIGHT_MULTIPLIER
+                                 * self.weight + (speed_in_ms**2 / height_m)
+                                 * self.CALORIES_SPEED_HEIGHT_MULTIPLIER
+                                 * self.weight) * duration_time)
         return self.calories
 
 
@@ -123,15 +125,15 @@ class Swimming(Training):
         self.count_pool = count_pool
 
     def get_mean_speed(self) -> float:
-        self.mean_speed = (self.length_pool * self.count_pool
-                           / self.M_IN_KM / self.duration)
+        self.mean_speed: float = (self.length_pool * self.count_pool
+                                  / self.M_IN_KM / self.duration)
         return self.mean_speed
 
     def get_spent_calories(self) -> float:
-        self.calories = ((self.mean_speed
-                         + self.MEAN_SPEED_MULTIPLIER)
-                         * self.CALORIES_MEAN_WEIGHT_MULTIPLIER
-                         * self.weight * self.duration)
+        self.calories: float = ((self.get_mean_speed()
+                                + self.MEAN_SPEED_MULTIPLIER)
+                                * self.CALORIES_MEAN_WEIGHT_MULTIPLIER
+                                * self.weight * self.duration)
         return self.calories
 
 
@@ -145,8 +147,7 @@ def read_package(workout_type: str, data: list) -> Training:
 
 def main(training: Training) -> None:
     """Главная функция."""
-    info = training.show_training_info()
-    print(info.get_message())
+    print(training.show_training_info().get_message())
 
 
 if __name__ == '__main__':
@@ -159,3 +160,4 @@ if __name__ == '__main__':
     for workout_type, data in packages:
         training = read_package(workout_type, data)
         main(training)
+# это должно было быть просто, но НЕТ
